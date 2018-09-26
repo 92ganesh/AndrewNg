@@ -63,8 +63,8 @@ Theta2_grad = zeros(size(Theta2));
 %
 
 % Part 1
-X = [ones(m, 1) X];
-layer2 = sigmoid(X * Theta1');
+X1 = [ones(m, 1) X];
+layer2 = sigmoid(X1 * Theta1');
 m = size(layer2, 1);
 layer2 = [ones(m, 1) layer2];
 outputLayer = sigmoid(layer2*Theta2');
@@ -94,21 +94,29 @@ regularization = sum(sum(regTheta1.^2))+sum(sum(regTheta2.^2));
 regularization = (lambda*regularization)/(2*m);
 J = J + regularization;
 
-% Part 2
-delta3 = outputLayer-oneHot;
-delta3=delta3';
-fprintf('-----\n');
-size(Theta2')
-size(delta3)
-fprintf('-----\n');
-delta2 = Theta2'*delta3.*sigmoidGradient(layer2);
 
-delta2=delta(2:end);
-Theta2_grad=(delta3*layer2')/m;
-Theta1_grad=(delta2*X')/m;
+% Part 2
+a1 = [ones(m,1) X];
+g1 = Theta1*X1';
+a2 = layer2;
+a3 = outputLayer;
+
+capitalDel1=zeros(size(Theta1));
+capitalDel2=zeros(size(Theta2));
+for i=1:m
+   y = oneHot(i,:);
+   del3 = outputLayer(i,:)-y;
+   del2 = Theta2'*del3'.*sigmoidGradient([1;g1(:,i)]);
+   del2 = del2(2:end);
+   capitalDel1=(capitalDel1+del2*a1(i,:));
+   capitalDel2=(capitalDel2+del3'*a2(i,:));
+end
+regTheta1 = [zeros(size(Theta1,1),1) Theta1(:,2:end)];
+regTheta2 = [zeros(size(Theta2,1),1) Theta2(:,2:end)];
+Theta1_grad=capitalDel1/m + regTheta1*lambda/m;
+Theta2_grad=capitalDel2/m + regTheta2*lambda/m;
 
 % -------------------------------------------------------------
-
 % =========================================================================
 
 % Unroll gradients
